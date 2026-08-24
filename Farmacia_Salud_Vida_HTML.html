@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Farmacia Salud & Vida — Sistema de Ventas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#080b14;--side:#0d121f;--panel:#111827;--card:#182233;--text:#f8fafc;--muted:#94a3b8;--accent:#eab308;--green:#22c55e;--red:#ef4444;--line:#263247}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}button,input,select{font:inherit}
+.login{min-height:100vh;display:grid;place-items:center}.loginbox{width:min(430px,92vw);background:var(--panel);padding:42px;border-radius:20px;box-shadow:0 20px 70px #0008}.logo{font-size:54px;text-align:center}.loginbox h1{text-align:center;margin:5px 0}.sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:28px}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}input,select{width:100%;padding:11px 12px;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:9px;outline:none}input:focus,select:focus{border-color:var(--accent)}
+.btn{border:0;border-radius:9px;padding:10px 14px;background:var(--card);color:var(--text);cursor:pointer;font-weight:700}.btn:hover{filter:brightness(1.15)}.primary{background:var(--accent);color:#111827}.danger{background:#5b1720}.green{background:#14532d}.ghost{background:transparent;border:1px solid var(--line)}
+.app{display:none;min-height:100vh}.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:var(--side);padding:20px 12px;overflow:auto}.brand{text-align:center;font-weight:800;font-size:18px}.brand span{font-size:38px;display:block}.role{text-align:center;color:var(--muted);font-size:11px;margin:5px 0 20px}.nav button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#cbd5e1;padding:11px 14px;border-radius:9px;cursor:pointer;margin:3px 0;font-weight:700}.nav button:hover,.nav button.active{background:#182233;color:#fff}.userbox{position:absolute;bottom:12px;left:12px;right:12px;color:var(--muted);font-size:12px}.main{margin-left:245px;padding:30px;min-height:100vh}.page h2{margin:0 0 4px}.page .desc{color:var(--muted);margin:0 0 22px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}.card{background:var(--card);border-radius:14px;padding:18px}.card small{color:var(--muted)}.card strong{display:block;font-size:24px;margin-top:6px}.panel{background:var(--panel);border-radius:14px;padding:18px;margin-bottom:18px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.toolbar>*{width:auto}.toolbar select{min-width:360px}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--muted);font-size:12px}td.num{text-align:right}.salehead{display:flex;justify-content:space-between;gap:15px;align-items:center}.total{font-size:24px;color:var(--accent);font-weight:800}.muted{color:var(--muted)}.empty{padding:35px;text-align:center;color:var(--muted)}.productgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.product{background:var(--card);padding:15px;border-radius:12px}.product h3{font-size:15px;margin:0 0 7px}.price{color:var(--accent);font-weight:800}.stock{color:var(--muted);font-size:12px}.modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:20}.modalbox{background:var(--panel);width:min(650px,92vw);max-height:90vh;overflow:auto;border-radius:16px;padding:22px}.close{float:right}.toast{position:fixed;right:20px;bottom:20px;background:#111827;border:1px solid var(--line);padding:12px 16px;border-radius:10px;display:none;z-index:50}
+@media(max-width:900px){.sidebar{position:static;width:100%;height:auto}.userbox{position:static;margin-top:15px}.app{display:block}.main{margin-left:0}.cards,.grid{grid-template-columns:1fr}.nav{display:grid;grid-template-columns:repeat(2,1fr)}}
+@media print{.sidebar,.toolbar,.no-print{display:none!important}.main{margin:0;padding:0}.panel{box-shadow:none}.page{display:block!important}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <div class="loginbox">
+    <div class="logo">💊</div><h1>FARMACIA SALUD & VIDA</h1>
+    <div class="sub">SISTEMA DE VENTAS • INVENTARIO • REPORTES</div>
+    <label>Usuario</label><input id="user" value="admin">
+    <label>Contraseña</label><input id="pass" type="password" value="admin123">
+    <button class="btn primary" style="width:100%;margin-top:20px" onclick="login()">INICIAR SESIÓN</button>
+    <div class="sub" style="margin:15px 0 0">admin / admin123 • cajero / cajero123</div>
+  </div>
+</div>
+
+<div id="app" class="app">
+<aside class="sidebar">
+  <div class="brand"><span>💊</span>FARMACIA SALUD & VIDA</div>
+  <div id="role" class="role"></div>
+  <div class="nav" id="nav"></div>
+  <div class="userbox">● <span id="who"></span><br><button class="btn ghost" style="width:100%;margin-top:8px" onclick="logout()">↪ CERRAR SESIÓN</button></div>
+</aside>
+<main class="main" id="main"></main>
+</div>
+
+<div id="modal" class="modal"><div class="modalbox"><button class="btn ghost close" onclick="closeModal()">✕</button><div id="modalBody"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const INITIAL = {"products": [{"id": 1, "nombre": "Paracetamol 500 mg - 20 tabletas", "precio": 35.0, "costo": 18.0, "stock": 35.0, "minimo": 5.25, "unidad": "caja", "disponible": 1, "categoria": "Medicamentos"}, {"id": 2, "nombre": "Ibuprofeno 400 mg - 10 tabletas", "precio": 42.0, "costo": 22.0, "stock": 28.0, "minimo": 4.2, "unidad": "caja", "disponible": 1, "categoria": "Medicamentos"}, {"id": 3, "nombre": "Loratadina 10 mg - 10 tabletas", "precio": 38.0, "costo": 19.0, "stock": 24.0, "minimo": 3.5999999999999996, "unidad": "caja", "disponible": 1, "categoria": "Medicamentos"}, {"id": 4, "nombre": "Omeprazol 20 mg - 14 cápsulas", "precio": 55.0, "costo": 29.0, "stock": 22.0, "minimo": 3.3, "unidad": "caja", "disponible": 1, "categoria": "Medicamentos"}, {"id": 5, "nombre": "Jarabe para la tos 120 ml", "precio": 68.0, "costo": 36.0, "stock": 16.0, "minimo": 2.4, "unidad": "frasco", "disponible": 1, "categoria": "Medicamentos"}, {"id": 6, "nombre": "Suero oral 625 ml", "precio": 28.0, "costo": 14.0, "stock": 30.0, "minimo": 4.5, "unidad": "frasco", "disponible": 1, "categoria": "Medicamentos"}, {"id": 7, "nombre": "Alcohol etílico 250 ml", "precio": 32.0, "costo": 16.0, "stock": 20.0, "minimo": 3.0, "unidad": "frasco", "disponible": 1, "categoria": "Primeros Auxilios"}, {"id": 8, "nombre": "Curitas surtidas - 20 piezas", "precio": 25.0, "costo": 12.0, "stock": 25.0, "minimo": 3.75, "unidad": "caja", "disponible": 1, "categoria": "Primeros Auxilios"}, {"id": 9, "nombre": "Gasas estériles - 10 piezas", "precio": 30.0, "costo": 15.0, "stock": 18.0, "minimo": 2.6999999999999997, "unidad": "caja", "disponible": 1, "categoria": "Primeros Auxilios"}, {"id": 10, "nombre": "Vitamina C 1 g - 10 tabletas", "precio": 48.0, "costo": 25.0, "stock": 20.0, "minimo": 3.0, "unidad": "caja", "disponible": 1, "categoria": "Vitaminas"}, {"id": 11, "nombre": "Multivitamínico - 30 tabletas", "precio": 95.0, "costo": 50.0, "stock": 15.0, "minimo": 2.25, "unidad": "frasco", "disponible": 1, "categoria": "Vitaminas"}, {"id": 12, "nombre": "Calcio + Vitamina D - 30 tabletas", "precio": 82.0, "costo": 43.0, "stock": 14.0, "minimo": 2.1, "unidad": "frasco", "disponible": 1, "categoria": "Vitaminas"}, {"id": 13, "nombre": "Gel antibacterial 250 ml", "precio": 35.0, "costo": 17.0, "stock": 26.0, "minimo": 3.9, "unidad": "frasco", "disponible": 1, "categoria": "Higiene"}, {"id": 14, "nombre": "Jabón neutro 100 g", "precio": 22.0, "costo": 10.0, "stock": 32.0, "minimo": 4.8, "unidad": "pieza", "disponible": 1, "categoria": "Higiene"}, {"id": 15, "nombre": "Pasta dental 75 ml", "precio": 29.0, "costo": 14.0, "stock": 30.0, "minimo": 4.5, "unidad": "pieza", "disponible": 1, "categoria": "Higiene"}, {"id": 16, "nombre": "Shampoo anticaspa 400 ml", "precio": 72.0, "costo": 38.0, "stock": 18.0, "minimo": 2.6999999999999997, "unidad": "frasco", "disponible": 1, "categoria": "Cuidado Personal"}, {"id": 17, "nombre": "Crema corporal 400 ml", "precio": 65.0, "costo": 34.0, "stock": 17.0, "minimo": 2.55, "unidad": "frasco", "disponible": 1, "categoria": "Cuidado Personal"}, {"id": 18, "nombre": "Desodorante roll-on 50 ml", "precio": 39.0, "costo": 20.0, "stock": 24.0, "minimo": 3.5999999999999996, "unidad": "pieza", "disponible": 1, "categoria": "Cuidado Personal"}, {"id": 19, "nombre": "Protector solar FPS 50 - 120 ml", "precio": 145.0, "costo": 78.0, "stock": 12.0, "minimo": 2.0, "unidad": "frasco", "disponible": 1, "categoria": "Dermocosmética"}, {"id": 20, "nombre": "Crema facial hidratante 50 g", "precio": 118.0, "costo": 62.0, "stock": 10.0, "minimo": 2.0, "unidad": "pieza", "disponible": 1, "categoria": "Dermocosmética"}, {"id": 21, "nombre": "Agua micelar 250 ml", "precio": 92.0, "costo": 48.0, "stock": 13.0, "minimo": 2.0, "unidad": "frasco", "disponible": 1, "categoria": "Dermocosmética"}, {"id": 22, "nombre": "Termómetro digital", "precio": 85.0, "costo": 45.0, "stock": 9.0, "minimo": 2.0, "unidad": "pieza", "disponible": 1, "categoria": "Ofertas"}, {"id": 23, "nombre": "Mascarillas quirúrgicas - 10 piezas", "precio": 30.0, "costo": 15.0, "stock": 25.0, "minimo": 3.75, "unidad": "caja", "disponible": 1, "categoria": "Ofertas"}, {"id": 24, "nombre": "Toallitas húmedas - 80 piezas", "precio": 42.0, "costo": 22.0, "stock": 20.0, "minimo": 3.0, "unidad": "paquete", "disponible": 1, "categoria": "Ofertas"}], "clients": [{"id": 1, "nombre": "Cliente General", "telefono": null, "correo": null, "puntos": 0, "nivel": "Cliente"}], "sales": [], "config": {"nombre": "FARMACIA SALUD & VIDA", "direccion": "Zona Centro", "telefono": "5555-0000", "moneda": "Q", "impuesto": "0"}};
+let db = JSON.parse(localStorage.getItem("farmacia_salud_vida_db") || "null") || INITIAL;
+let currentUser=null, currentPage="reportes", selectedSaleId=null;
+
+function save(){localStorage.setItem("farmacia_salud_vida_db",JSON.stringify(db))}
+function money(n){return "Q "+Number(n||0).toLocaleString("es-GT",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function toast(t){let x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",2200)}
+function login(){
+ let u=document.getElementById("user").value.trim(),p=document.getElementById("pass").value;
+ if((u==="admin"&&p==="admin123")||(u==="cajero"&&p==="cajero123")){
+  currentUser={usuario:u,rol:u==="admin"?"admin":"cajero"};document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";
+  document.getElementById("role").textContent=currentUser.rol.toUpperCase();document.getElementById("who").textContent=currentUser.usuario+" • "+currentUser.rol;
+  buildNav();show("reportes");
+ }else toast("Usuario o contraseña incorrectos");
+}
+function logout(){currentUser=null;document.getElementById("app").style.display="none";document.getElementById("login").style.display="grid"}
+function buildNav(){
+ const items=currentUser.rol==="admin"?[
+ ["dashboard","⌂ Dashboard"],["ventas","💳 Punto de venta"],["productos","💊 Productos"],["inventario","📦 Inventario"],["clientes","👥 Clientes"],["reportes","📊 Reportes"],["config","⚙ Configuración"]
+ ]:[["ventas","💳 Ventas y cobros"],["reportes","📊 Reportes"]];
+ document.getElementById("nav").innerHTML=items.map(x=>`<button data-page="${x[0]}" onclick="show('${x[0]}')">${x[1]}</button>`).join("");
+}
+function show(page){currentPage=page;document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));let f={dashboard:dashboardPage,ventas:salesPage,productos:productsPage,inventario:inventoryPage,clientes:clientsPage,reportes:reportsPage,config:configPage};document.getElementById("main").innerHTML=f[page]()}
+function dashboardPage(){
+ let paid=db.sales.filter(s=>s.estado==="Pagado"),total=paid.reduce((a,s)=>a+s.total,0),today=new Date().toISOString().slice(0,10),td=paid.filter(s=>s.fecha.slice(0,10)===today).reduce((a,s)=>a+s.total,0);
+ return `<section class=page><h2>Dashboard</h2><p class=desc>Resumen general de Farmacia Salud & Vida.</p><div class=cards><div class=card>🧾<small>Ventas pagadas</small><strong>${paid.length}</strong></div><div class=card>💰<small>Ingresos acumulados</small><strong>${money(total)}</strong></div><div class=card>📅<small>Ventas de hoy</small><strong>${money(td)}</strong></div></div><div class=panel><h3>Productos</h3><p class=muted>${db.products.length} productos registrados • ${db.products.filter(p=>p.stock<=p.minimo).length} con stock bajo.</p></div></section>`
+}
+function salesPage(){
+ return `<section class=page><h2>Punto de venta</h2><p class=desc>Registra una venta y luego genera su reporte.</p>
+ <div class=grid><div class=panel><h3>Productos</h3><div class=productgrid>${db.products.filter(p=>p.disponible).map(p=>`<div class=product><h3>${esc(p.nombre)}</h3><div class=price>${money(p.precio)}</div><div class=stock>Stock: ${p.stock} ${esc(p.unidad)}</div><button class="btn primary" style="margin-top:10px" onclick="addToCart(${p.id})">Agregar</button></div>`).join("")}</div></div>
+ <div class=panel><h3>Carrito</h3><div id=cart></div><button class="btn primary" onclick="finishSale()">💳 COBRAR</button></div></div></section>`;
+}
+let cart=[];
+function addToCart(id){let p=db.products.find(x=>x.id===id),c=cart.find(x=>x.id===id);if(c)c.qty++;else cart.push({id,qty:1});renderCart()}
+function renderCart(){let el=document.getElementById("cart");if(!el)return;if(!cart.length){el.innerHTML='<div class=empty>Carrito vacío</div>';return}el.innerHTML=cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span>${esc(p.nombre)} × ${c.qty}</span><b>${money(p.precio*c.qty)}</b></div>`}).join("")+`<h3 style="text-align:right">Total: ${money(cart.reduce((a,c)=>a+db.products.find(p=>p.id===c.id).precio*c.qty,0))}</h3>`}
+function finishSale(){if(!cart.length)return toast("Agrega productos al carrito");let total=cart.reduce((a,c)=>a+db.products.find(p=>p.id===c.id).precio*c.qty,0);let now=new Date(),num="V-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(db.sales.length+1).padStart(4,"0");let sale={id:Date.now(),numero:num,fecha:now.toISOString(),estado:"Pagado",subtotal:total,descuento:0,impuesto:0,total,metodo_pago:"Efectivo",cliente:"Cliente General",vendedor:currentUser.usuario,details:cart.map(c=>{let p=db.products.find(x=>x.id===c.id);p.stock=Math.max(0,p.stock-c.qty);return {nombre:p.nombre,cantidad:c.qty,precio:p.precio,total:p.precio*c.qty}})};db.sales.unshift(sale);cart=[];save();toast("Venta registrada: "+num);show("reportes")}
+function productsPage(){return `<section class=page><h2>Productos</h2><p class=desc>Catálogo de productos.</p><div class=panel><div class=toolbar><input id=prodSearch placeholder="Buscar producto..." oninput="filterProducts()" style="min-width:260px"><button class="btn primary" onclick="openProduct()">＋ AGREGAR PRODUCTO</button></div><div id=prodList class=productgrid style="margin-top:16px"></div></div></section>`}
+function filterProducts(){let q=(document.getElementById("prodSearch")?.value||"").toLowerCase();document.getElementById("prodList").innerHTML=db.products.filter(p=>p.nombre.toLowerCase().includes(q)).map(p=>`<div class=product><h3>${esc(p.nombre)}</h3><div class=price>${money(p.precio)}</div><div class=stock>Stock: ${p.stock} ${esc(p.unidad)}</div></div>`).join("")}
+function openProduct(){document.getElementById("modalBody").innerHTML=`<h2>Nuevo producto</h2><label>Nombre</label><input id=np><label>Precio</label><input id=npr type=number step=.01><label>Stock</label><input id=ns type=number step=.01><label>Unidad</label><input id=nu value="unidad"><button class="btn primary" style="margin-top:18px" onclick="saveProduct()">GUARDAR</button>`;document.getElementById("modal").style.display="grid"}
+function saveProduct(){let p={id:Date.now(),nombre:document.getElementById("np").value,precio:+document.getElementById("npr").value,costo:0,stock:+document.getElementById("ns").value,minimo:1,unidad:document.getElementById("nu").value,disponible:1,categoria:"General"};if(!p.nombre)return;db.products.push(p);save();closeModal();show("productos");filterProducts();toast("Producto guardado")}
+function inventoryPage(){return `<section class=page><h2>Inventario</h2><p class=desc>Existencias actuales.</p><div class=panel><div class=tablewrap><table><thead><tr><th>Producto</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody>${db.products.map(p=>`<tr><td>${esc(p.nombre)}</td><td>${p.stock} ${esc(p.unidad)}</td><td>${p.minimo}</td><td>${p.stock<=p.minimo?'<span style="color:var(--red)">⚠ Bajo</span>':'<span style="color:var(--green)">✓ Normal</span>'}</td></tr>`).join("")}</tbody></table></div></div></section>`}
+function clientsPage(){return `<section class=page><h2>Clientes</h2><p class=desc>Clientes registrados.</p><div class=panel><table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Nivel</th></tr></thead><tbody>${db.clients.map(c=>`<tr><td>${esc(c.nombre)}</td><td>${esc(c.telefono||"-")}</td><td>${esc(c.correo||"-")}</td><td>${esc(c.nivel||"Cliente")}</td></tr>`).join("")}</tbody></table></div></section>`}
+function reportsPage(){
+ let paid=db.sales.filter(s=>s.estado==="Pagado"),total=paid.reduce((a,s)=>a+s.total,0),today=new Date().toISOString().slice(0,10),td=paid.filter(s=>s.fecha.slice(0,10)===today).reduce((a,s)=>a+s.total,0);
+ selectedSaleId=selectedSaleId&&db.sales.some(s=>s.id===selectedSaleId)?selectedSaleId:(db.sales[0]?.id||null);
+ let sale=db.sales.find(s=>s.id===selectedSaleId);
+ return `<section class=page><h2>REPORTES DE VENTAS</h2><p class=desc>Consulta cada venta y genera el reporte en PDF o Excel. También puedes compartirlo por correo o WhatsApp.</p>
+ <div class=cards><div class=card>🧾<small>Ventas pagadas</small><strong>${paid.length}</strong></div><div class=card>💰<small>Ingresos acumulados</small><strong>${money(total)}</strong></div><div class=card>📅<small>Ventas de hoy</small><strong>${money(td)}</strong></div></div>
+ <div class=panel"><div class=toolbar><b>SELECCIONA UNA VENTA</b><select id=saleSelect onchange="selectSale(this.value)">${db.sales.length?db.sales.map(s=>`<option value="${s.id}" ${s.id===selectedSaleId?"selected":""}>${esc(s.numero)} • ${new Date(s.fecha).toLocaleString("es-GT")} • ${esc(s.cliente)} • ${money(s.total)}</option>`).join(""):"<option>No hay ventas registradas</option>"}</select><button class=btn onclick="show('reportes')">ACTUALIZAR</button></div></div>
+ <div class=panel>${sale?saleDetail(sale):'<div class=empty>No hay ventas registradas todavía.<br><br>Ve a <b>Punto de venta</b> para crear una venta.</div>'}</div></section>`;
+}
+function selectSale(v){selectedSaleId=+v;show("reportes")}
+function saleDetail(s){
+ return `<div class=salehead><div><h2 style="margin:0">${esc(s.numero)} • ${esc(s.cliente)}</h2><div class=muted>Fecha: ${new Date(s.fecha).toLocaleString("es-GT")} | Estado: ${esc(s.estado)} | Pago: ${esc(s.metodo_pago||"Sin registrar")} | Vendedor: ${esc(s.vendedor||"-")}</div></div><div class=total>${money(s.total)}</div></div>
+ <div class=toolbar no-print style="margin:18px 0"><button class="btn primary" onclick="exportPDF()">📄 EXPORTAR PDF</button><button class="btn primary" onclick="exportExcel()">📊 EXPORTAR EXCEL</button><button class=btn onclick="emailReport()">✉ ABRIR CORREO</button><button class=btn onclick="whatsappReport()">💬 WHATSAPP</button><button class=btn onclick="printReport()">🖨 IMPRIMIR</button></div>
+ <div class=tablewrap><table id=saleTable><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>${s.details.map(d=>`<tr><td>${esc(d.nombre)}</td><td>${d.cantidad}</td><td>${money(d.precio)}</td><td>${money(d.total)}</td></tr>`).join("")}</tbody><tfoot><tr><td colspan=3 class=num>Subtotal</td><td>${money(s.subtotal)}</td></tr><tr><td colspan=3 class=num>Descuento</td><td>${money(s.descuento)}</td></tr><tr><td colspan=3 class=num>Impuesto</td><td>${money(s.impuesto)}</td></tr><tr><th colspan=3 class=num>TOTAL</th><th>${money(s.total)}</th></tr></tfoot></table></div>`;
+}
+function getSale(){return db.sales.find(s=>s.id===selectedSaleId)}
+function exportPDF(){
+ let s=getSale();if(!s)return toast("Selecciona una venta");
+ if(!window.jspdf)return printReport();
+ const {jsPDF}=window.jspdf,doc=new jsPDF();doc.setFontSize(18);doc.text(db.config.nombre||"FARMACIA SALUD & VIDA",105,18,{align:"center"});doc.setFontSize(10);doc.text(db.config.direccion||"",15,28);doc.text("Teléfono: "+(db.config.telefono||""),15,34);doc.setFontSize(14);doc.text("REPORTE DE VENTA "+s.numero,15,47);doc.setFontSize(10);doc.text(`Cliente: ${s.cliente} | Fecha: ${new Date(s.fecha).toLocaleString("es-GT")}`,15,55);doc.text(`Vendedor: ${s.vendedor||"-"} | Pago: ${s.metodo_pago||"-"}`,15,61);
+ doc.autoTable({startY:68,head:[["Producto","Cantidad","Precio","Total"]],body:s.details.map(d=>[d.nombre,d.cantidad,money(d.precio),money(d.total)]),foot:[["","","Subtotal",money(s.subtotal)],["","","Descuento",money(s.descuento)],["","","Impuesto",money(s.impuesto)],["","","TOTAL",money(s.total)]]});
+ doc.save("Reporte_"+s.numero+".pdf");toast("PDF generado");
+}
+function exportExcel(){
+ let s=getSale();if(!s)return toast("Selecciona una venta");
+ if(!window.XLSX){toast("No se cargó el módulo Excel; usa Imprimir");return}
+ let rows=[[db.config.nombre||"FARMACIA SALUD & VIDA"],["Reporte de venta",s.numero],["Cliente",s.cliente],["Fecha",new Date(s.fecha).toLocaleString("es-GT")],["Vendedor",s.vendedor||"-"],["Método de pago",s.metodo_pago||"-"],[],["Producto","Cantidad","Precio","Total"],...s.details.map(d=>[d.nombre,d.cantidad,d.precio,d.total]),[],["","","Subtotal",s.subtotal],["","","Descuento",s.descuento],["","","Impuesto",s.impuesto],["","","TOTAL",s.total]];
+ let ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Reporte de venta");XLSX.writeFile(wb,"Reporte_"+s.numero+".xlsx");toast("Excel generado");
+}
+function emailReport(){let s=getSale();if(!s)return;let sub=encodeURIComponent("Reporte de venta "+s.numero+" - Farmacia Salud & Vida"),body=encodeURIComponent(`Adjunto encontrarás el reporte de la venta ${s.numero}.\\nCliente: ${s.cliente}\\nTotal: ${money(s.total)}\\n\\nEl PDF o Excel generado puede adjuntarse desde tu correo.`);location.href=`mailto:?subject=${sub}&body=${body}`}
+function whatsappReport(){let s=getSale();if(!s)return;let text=encodeURIComponent(`*Farmacia Salud & Vida*\\nReporte de venta ${s.numero}\\nCliente: ${s.cliente}\\nFecha: ${new Date(s.fecha).toLocaleString("es-GT")}\\nTotal: ${money(s.total)}\\n\\nReporte listo para compartir en PDF o Excel.`);window.open("https://wa.me/?text="+text,"_blank")}
+function printReport(){window.print()}
+function configPage(){return `<section class=page><h2>Configuración</h2><p class=desc>Datos que aparecen en los reportes.</p><div class=panel style="max-width:650px"><label>Nombre</label><input id=cn value="${esc(db.config.nombre||"FARMACIA SALUD & VIDA")}"><label>Dirección</label><input id=cd value="${esc(db.config.direccion||"")}"><label>Teléfono</label><input id=ct value="${esc(db.config.telefono||"")}"><button class="btn primary" style="margin-top:18px" onclick="saveConfig()">GUARDAR CONFIGURACIÓN</button></div></section>`}
+function saveConfig(){db.config.nombre=document.getElementById("cn").value;db.config.direccion=document.getElementById("cd").value;db.config.telefono=document.getElementById("ct").value;save();toast("Configuración guardada")}
+function closeModal(){document.getElementById("modal").style.display="none"}
+</script>
+</body>
+</html>
